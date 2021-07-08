@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js"
+    "test": "jest --watchAll",
+    "start": "nodemon app.js"
   },
   "repository": {
     "type": "git",
@@ -18,9 +18,24 @@
   },
   "homepage": "https://github.com/vonder-thailand/intern-backend#readme",
   "dependencies": {
+    "aws-sdk": "^2.928.0",
+    "axios": "^0.21.1",
+    "bcrypt": "^5.0.1",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "jest": "^27.0.3",
+    "express-validator": "^6.12.0",
+    "install": "^0.13.0",
+    "jest": "^27.0.5",
+    "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
-    "nodemon": "^2.0.7"
+    "mongoose": "^5.12.13",
+    "multer": "^1.4.2",
+    "ngrok": "^4.0.1",
+    "node-cron": "^3.0.0",
+    "nodemon": "^2.0.7",
+    "npm": "^7.17.0",
+    "supertest": "^6.1.3"
   }
 }

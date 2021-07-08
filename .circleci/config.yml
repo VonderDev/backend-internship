@@ -1,0 +1,134 @@
+version: 2.1
+
+jobs:
+  development:
+    docker:
+      - image: 'cimg/node:14.17.0'
+    steps:
+      - checkout
+      - run:
+          name: install aws cli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            chmod +x ./aws/install
+            sudo ./aws/install
+      - run:
+          name: aws configue
+          command: |
+            aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+            aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+            aws configure set default.region "$AWS_DEFAULT_REGION"
+            echo 'export PUBLIC_IP=$(curl ipinfo.io/ip)' >> $BASH_ENV
+      - run:
+          name: ingress rule
+          command: aws ec2 authorize-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
+      - run:
+          name: give ingress rule some time to propogate
+          command: sleep 5
+      - run:
+          name: get PublicIP of EC2 Instance
+          command: |
+            echo 'export ec2PublicIP=$(aws ec2 describe-instances --output text --filters 'Name=tag:Name,Values=vonder-me-test' --query 'Reservations[].Instances[].PublicIpAddress[]')' >> $BASH_ENV
+      - add_ssh_keys:
+          fingerprints:
+            - "07:9b:80:1a:f1:92:78:d8:c2:ca:78:7e:88:7c:b2:08"
+      - run:
+          name: Deploy
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout develop ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_DEV" >> .env ; echo "Secret_Key=$SK" >> .env ; chmod +x ./deploy_dev.sh ; ./deploy_dev.sh"
+      - run:
+          name: revoke ingress rule
+          command: aws ec2 revoke-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
+  staging:
+    docker:
+      - image: 'cimg/node:14.17.0'
+    steps:
+      - checkout
+      - run:
+          name: install aws cli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            chmod +x ./aws/install
+            sudo ./aws/install
+      - run:
+          name: aws configue
+          command: |
+            aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+            aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+            aws configure set default.region "$AWS_DEFAULT_REGION"
+            echo 'export PUBLIC_IP=$(curl ipinfo.io/ip)' >> $BASH_ENV
+      - run:
+          name: ingress rule
+          command: aws ec2 authorize-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
+      - run:
+          name: give ingress rule some time to propogate
+          command: sleep 5
+      - run:
+          name: get PublicIP of EC2 Instance
+          command: |
+            echo 'export ec2PublicIP=$(aws ec2 describe-instances --output text --filters 'Name=tag:Name,Values=vonder-me-test' --query 'Reservations[].Instances[].PublicIpAddress[]')' >> $BASH_ENV
+      - add_ssh_keys:
+          fingerprints:
+            - "07:9b:80:1a:f1:92:78:d8:c2:ca:78:7e:88:7c:b2:08"
+      - run:
+          name: Deploy
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout staging ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_STAGING" >> .env ; echo "Secret_Key=$SK" >> .env ; chmod +x ./deploy_staging.sh ; ./deploy_staging.sh"
+      - run:
+          name: revoke ingress rule
+          command: aws ec2 revoke-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
+  production:
+    docker:
+      - image: 'cimg/node:14.17.0'
+    steps:
+      - checkout
+      - run:
+          name: install aws cli
+          command: |
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            chmod +x ./aws/install
+            sudo ./aws/install
+      - run:
+          name: aws configue
+          command: |
+            aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"
+            aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"
+            aws configure set default.region "$AWS_DEFAULT_REGION"
+            echo 'export PUBLIC_IP=$(curl ipinfo.io/ip)' >> $BASH_ENV
+      - run:
+          name: ingress rule
+          command: aws ec2 authorize-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
+      - run:
+          name: give ingress rule some time to propogate
+          command: sleep 5
+      - run:
+          name: get PublicIP of EC2 Instance
+          command: |
+            echo 'export ec2PublicIP=$(aws ec2 describe-instances --output text --filters 'Name=tag:Name,Values=vonder-me-test' --query 'Reservations[].Instances[].PublicIpAddress[]')' >> $BASH_ENV
+      - add_ssh_keys:
+          fingerprints:
+            - "07:9b:80:1a:f1:92:78:d8:c2:ca:78:7e:88:7c:b2:08"
+      - run:
+          name: Deploy
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout main ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_PROD" >> .env ; echo "Secret_Key=$SK" >> .env ; chmod +x ./deploy_prod.sh ; ./deploy_prod.sh"
+      - run:
+          name: revoke ingress rule
+          command: aws ec2 revoke-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - development:
+          filters:
+            branches:
+              only: develop
+      - staging:
+          filters:
+            branches:
+              only: staging
+      - production:
+          filters:
+            branches:
+              only: main
+      
