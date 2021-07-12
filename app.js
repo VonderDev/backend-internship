@@ -7,7 +7,7 @@ const authRoutes = require("./src/routes/auth");
 const guestRoute = require("./src/routes/guest");
 const connectToDatabase = require("./src/utils/mongo");
 const app = express();
-const port = 5000;
+const port = 3000;
 const cors = require("cors");
 app.use(cors());
 // app.use(cors({ origin: "http://18.139.108.242:5000/" }));
