@@ -6,7 +6,8 @@ const mongoose = require("mongoose");
 const { body, validationResult } = require("express-validator");
 
 exports.login = async (req, res, next) => {
-  const { email, password } = req.body;
+  let { email, password } = req.body;
+  email = email.toLowerCase();
   try {
     const user = await userAuth.findOne({ email });
     if (!user) {
@@ -33,7 +34,8 @@ exports.login = async (req, res, next) => {
   }
 };
 exports.signup = async (req, res, next) => {
-  const { email, password, username, role, firstName, lastName } = req.body;
+  let { email, password, username, role, firstName, lastName } = req.body;
+  email = email.toLowerCase();
   try {
     const hasEmail = await userAuth.findOne({ email });
     const hasUser = await userAuth.findOne({ username });
@@ -65,9 +67,10 @@ exports.signup = async (req, res, next) => {
     }
 
     const hashedpassword = await bcrypt.hash(password, 10);
+    const emailLowercase = email.toLowerCase();
     const resuit = await userAuth.create({
       _id: req._id ? req._id : mongoose.Types.ObjectId(),
-      email,
+      email: emailLowercase,
       password: hashedpassword,
       username,
       role,

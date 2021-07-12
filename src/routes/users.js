@@ -59,7 +59,15 @@ router.get(
   usersController.search
 );
 
-router.post("/newResult", auth.authMiddleware, usersController.postNewResult);
-router.get("/newResult", auth.authMiddleware, usersController.getNewResult);
+router.post(
+  "/user/newResult",
+  auth.authMiddleware,
+  usersController.postNewResult
+);
+router.get(
+  "/user/newResult",
+  auth.authMiddleware,
+  usersController.getNewResult
+);
 
 module.exports = router;
