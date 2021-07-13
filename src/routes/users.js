@@ -28,7 +28,7 @@ router.get(
   auth.authMiddleware,
   usersController.getAllContents
 );
-router.get(
+router.post(
   "/user/content/tag",
   auth.authMiddleware,
   usersController.getSortByTag
@@ -69,5 +69,18 @@ router.get(
   auth.authMiddleware,
   usersController.getNewResult
 );
+router.get(
+  "/user/content",
+  auth.authMiddleware,
+  usersController.getContentById
+);
+
+router.get(
+  "/user/newestContent",
+  auth.authMiddleware,
+  usersController.getNewestContent
+);
+
+router.get("/user/profile", auth.authMiddleware, usersController.getProfile);
 
 module.exports = router;

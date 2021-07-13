@@ -37,7 +37,13 @@ jobs:
             - "07:9b:80:1a:f1:92:78:d8:c2:ca:78:7e:88:7c:b2:08"
       - run:
           name: Deploy
-          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout develop ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_DEV" >> .env ; echo "Secret_Key=$SK" >> .env ; chmod +x ./deploy_dev.sh ; ./deploy_dev.sh"
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout develop ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_DEV" >> .env ; 
+                   echo "Secret_Key=$SK" >> .env ; 
+                   echo "AWS_BUCKET_NAME=$AWS_BUCKET_NAME" >> .env ; 
+                   echo "S3_AWS_ACCESS_KEY=$S3_AWS_ACCESS_KEY" >> .env ; 
+                   echo "AWS_BUCKET_REGION=$AWS_BUCKET_REGION" >> .env ; 
+                   echo "S3_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY" >> .env ;
+                   chmod +x ./deploy_dev.sh ; ./deploy_dev.sh"
       - run:
           name: revoke ingress rule
           command: aws ec2 revoke-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
@@ -75,7 +81,13 @@ jobs:
             - "07:9b:80:1a:f1:92:78:d8:c2:ca:78:7e:88:7c:b2:08"
       - run:
           name: Deploy
-          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout staging ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_STAGING" >> .env ; echo "Secret_Key=$SK" >> .env ; chmod +x ./deploy_staging.sh ; ./deploy_staging.sh"
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout staging ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_STAGING" >> .env ;
+                   echo "Secret_Key=$SK" >> .env ;
+                   echo "AWS_BUCKET_NAME=$AWS_BUCKET_NAME" >> .env ; 
+                   echo "S3_AWS_ACCESS_KEY=$S3_AWS_ACCESS_KEY" >> .env ; 
+                   echo "AWS_BUCKET_REGION=$AWS_BUCKET_REGION" >> .env ; 
+                   echo "S3_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY" >> .env ;
+                   chmod +x ./deploy_staging.sh ; ./deploy_staging.sh"
       - run:
           name: revoke ingress rule
           command: aws ec2 revoke-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32
@@ -113,7 +125,13 @@ jobs:
             - "07:9b:80:1a:f1:92:78:d8:c2:ca:78:7e:88:7c:b2:08"
       - run:
           name: Deploy
-          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout main ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_PROD" >> .env ; echo "Secret_Key=$SK" >> .env ; chmod +x ./deploy_prod.sh ; ./deploy_prod.sh"
+          command: ssh -o StrictHostKeyChecking=no $EC2_USERNAME@$ec2PublicIP "cd backend-internship ; git checkout main ; git pull ; rm -rf .env ; touch .env ; echo "DB_CONNECTION=$DB_PROD" >> .env ; 
+                   echo "Secret_Key=$SK" >> .env ; 
+                   echo "AWS_BUCKET_NAME=$AWS_BUCKET_NAME" >> .env ; 
+                   echo "S3_AWS_ACCESS_KEY=$S3_AWS_ACCESS_KEY" >> .env ; 
+                   echo "AWS_BUCKET_REGION=$AWS_BUCKET_REGION" >> .env ; 
+                   echo "S3_SECRET_ACCESS_KEY=$S3_SECRET_ACCESS_KEY" >> .env ;
+                   chmod +x ./deploy_prod.sh ; ./deploy_prod.sh"
       - run:
           name: revoke ingress rule
           command: aws ec2 revoke-security-group-ingress --region $AWS_REGION --group-id $SG_ID --protocol tcp --port 22 --cidr $PUBLIC_IP/32

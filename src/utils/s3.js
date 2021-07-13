@@ -5,13 +5,13 @@ const mongoose = require("mongoose");
 const {
   AWS_BUCKET_NAME,
   AWS_BUCKET_REGION,
-  AWS_ACCESS_KEY,
-  SECRET_ACCESS_KEY,
+  S3_AWS_ACCESS_KEY,
+  S3_SECRET_ACCESS_KEY,
 } = process.env;
 aws.config.setPromisesDependency();
 aws.config.update({
-  accessKeyId: AWS_ACCESS_KEY,
-  secretAccessKey: SECRET_ACCESS_KEY,
+  accessKeyId: S3_AWS_ACCESS_KEY,
+  secretAccessKey: S3_SECRET_ACCESS_KEY,
   region: AWS_BUCKET_REGION,
 });
 const s3 = new aws.S3();

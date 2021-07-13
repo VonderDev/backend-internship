@@ -119,23 +119,23 @@ module.exports.calculateResult = async (results) => {
     category_id = results[i]["categoryId"];
     score = results[i]["score"];
     if (category_id == 1) {
-      category[0]["score"] += score;
+      category[0]["score"] += score * 10;
     } else if (category_id == 2) {
-      category[1]["score"] += score;
+      category[1]["score"] += score * 10;
     } else if (category_id == 3) {
-      category[2]["score"] += score;
+      category[2]["score"] += score * 10;
     } else if (category_id == 4) {
-      category[3]["score"] += score;
+      category[3]["score"] += score * 10;
     } else if (category_id == 5) {
-      category[4]["score"] += score;
+      category[4]["score"] += score * 10;
     } else if (category_id == 6) {
-      category[5]["score"] += score;
+      category[5]["score"] += score * 10;
     } else if (category_id == 7) {
-      category[6]["score"] += score;
+      category[6]["score"] += score * 10;
     } else if (category_id == 8) {
-      category[7]["score"] += score;
+      category[7]["score"] += score * 10;
     } else {
-      throw { message: "invalid category" };
+      throw { message: "invalid category", status: 422 };
     }
   }
 
@@ -289,10 +289,29 @@ module.exports.createGuest = async () => {
 module.exports.createContent = async (input, id) => {
   let { content_body, title, likes, uid_likes, tag, content_type, image } =
     input;
+  if (!title) {
+    throw {
+      message: "Please specify title",
+      status: 203,
+    };
+  }
+  if (!content_body) {
+    throw {
+      message: "Please specify content_body",
+      status: 203,
+    };
+  }
+  if (!content_type) {
+    throw {
+      message: "Please specify content_type",
+      status: 203,
+    };
+  }
+  content_type = content_type.toLowerCase();
   tag = tag.map((x) => {
     return x.toLowerCase();
   });
-  var ct = content_type.toLowerCase();
+
   return await ContentModel.create({
     content_body,
     title,
@@ -300,15 +319,38 @@ module.exports.createContent = async (input, id) => {
     uid_likes,
     author_id: id,
     tag,
-    content_type: ct,
+    content_type,
     image,
   });
 };
 
 module.exports.getAllContents = async () => {
-  return await ContentModel.find({
+  const content = await ContentModel.find({
     isDeleted: false,
   });
+
+  const username = await authModel.find({ _id: content[0].author_id });
+  const auth_username = username[0].username;
+  const new_contents = [];
+  content.map((item) => {
+    const new_content = {
+      _id: item._id,
+      author_id: item.author_id,
+      content_body: item.content_body,
+      title: item.title,
+      likes: item.likes,
+      uid_likes: item.uid_likes,
+      tag: item.tag,
+      content_type: item.content_type,
+      image: item.image,
+      author_username: auth_username,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    };
+    new_contents.push(new_content);
+  });
+
+  return new_contents;
 };
 
 module.exports.getSortByTag = async (tag, dataSet, content_type) => {
@@ -322,30 +364,74 @@ module.exports.getSortByTag = async (tag, dataSet, content_type) => {
     "people smart",
     "music smart",
   ];
-  tag = tag.map((x) => {
-    return x.toLowerCase();
-  });
 
-  tag.map((x) =>
-    tags.indexOf(x) == -1
-      ? (function () {
-          throw { message: "Out of Tag", status: 404 };
-        })()
-      : console.log("pass")
-  );
-  if (dataSet == null) {
-    return await ContentModel.find({
-      tag: { $in: tag },
-      content_type: { $in: content_type },
-      isDeleted: false,
+  if (content_type.length && tag.length) {
+    content_type = content_type.map((x) => {
+      return x.toLowerCase();
     });
-  } else {
-    let newItem = dataSet.filter((item) =>
-      item.tag.some((r) => tag.indexOf(r) >= 0)
-    );
-    newItem = dataSet.filter((item) => item.content_type == content_type);
 
-    return newItem;
+    tag = tag.map((x) => {
+      return x.toLowerCase();
+    });
+
+    tag.map((x) =>
+      tags.indexOf(x) == -1
+        ? (function () {
+            throw { message: "Out of Tag", status: 404 };
+          })()
+        : console.log("pass")
+    );
+    if (dataSet == null) {
+      return await ContentModel.find({
+        $and: [{ content_type: { $in: content_type } }, { tag: { $in: tag } }],
+        isDeleted: false,
+      });
+    } else {
+      let newItem = dataSet.filter((item) =>
+        item.tag.some((r) => tag.indexOf(r) >= 0)
+      );
+
+      const filters = newItem.filter((item) =>
+        content_type.includes(item.content_type)
+      );
+
+      return filters;
+    }
+  } else if (!content_type.length && !tag.length) {
+    return await ContentModel.find({});
+  } else if (!tag.length) {
+    content_type = content_type.map((x) => {
+      return x.toLowerCase();
+    });
+
+    if (dataSet == null) {
+      return await ContentModel.find({
+        content_type: { $in: content_type },
+        isDeleted: false,
+      });
+    } else {
+      const filters = dataSet.filter((item) =>
+        content_type.includes(item.content_type)
+      );
+
+      return filters;
+    }
+  } else if (!content_type.length) {
+    tag = tag.map((x) => {
+      return x.toLowerCase();
+    });
+    if (dataSet == null) {
+      return await ContentModel.find({
+        tag: { $in: tag },
+        isDeleted: false,
+      });
+    } else {
+      let newItem = dataSet.filter((item) =>
+        item.tag.some((r) => tag.indexOf(r) >= 0)
+      );
+
+      return newItem;
+    }
   }
 };
 
@@ -629,10 +715,13 @@ module.exports.getSummarise = async () => {
 //   ]);
 // };
 
-module.exports.search = async (input, tag, con_ty) => {
+module.exports.search = async (input, tag, content_type) => {
   let new_input = new RegExp(input, "i");
-  if (tag) {
+  if (tag && content_type) {
     tag = tag.map((x) => {
+      return x.toLowerCase();
+    });
+    content_type = content_type.map((x) => {
       return x.toLowerCase();
     });
 
@@ -650,13 +739,13 @@ module.exports.search = async (input, tag, con_ty) => {
         $match: {
           $or: [
             {
-              content_type: con_ty,
+              content_type: { $in: content_type },
               tag: { $in: tag },
               isDeleted: false,
               "author_data.username": { $regex: new_input },
             },
             {
-              content_type: con_ty,
+              content_type: { $in: content_type },
               tag: { $in: tag },
               isDeleted: false,
               title: { $regex: new_input },
@@ -665,7 +754,7 @@ module.exports.search = async (input, tag, con_ty) => {
         },
       },
     ]);
-  } else {
+  } else if (!tag && !content_type) {
     return await ContentModel.aggregate([
       {
         $lookup: {
@@ -709,5 +798,58 @@ module.exports.search = async (input, tag, con_ty) => {
         },
       },
     ]);
+  }
+};
+
+module.exports.getContentById = async (input) => {
+  const user = await userAuth.findOne({
+    _id: input,
+  });
+  if (!user) {
+    throw {
+      message: "invalid user id",
+      status: 404,
+    };
+  }
+  if (valid_id(input)) {
+    const content = await ContentModel.find({
+      author_id: input,
+      isDeleted: false,
+    });
+    if (content == "") {
+      throw {
+        message:
+          "Error from trying to get non-existing content, please create content first",
+        status: 404,
+      };
+    }
+    const username = await authModel.find({ _id: content[0].author_id });
+    const auth_username = username[0].username;
+    const new_contents = [];
+    content.map((item) => {
+      const new_content = {
+        _id: item._id,
+        author_id: item.author_id,
+        content_body: item.content_body,
+        title: item.title,
+        likes: item.likes,
+        uid_likes: item.uid_likes,
+        tag: item.tag,
+        content_type: item.content_type,
+        image: item.image,
+        author_username: auth_username,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      };
+      new_contents.push(new_content);
+    });
+
+    return new_contents;
+  } else {
+    throw {
+      message:
+        "Error from trying to get non-existing content, please create content first",
+      status: 404,
+    };
   }
 };

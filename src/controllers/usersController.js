@@ -16,12 +16,17 @@ const {
   deleteContent,
   deleteComment,
   search,
+  getContentById,
 } = require("../functions/index");
 const { uploadManyFile } = require("../utils/s3");
 const resultNew = require("../models/resultNew.model");
+const userAuth = require("../models/auth.model");
 const summariseModel = require("../models/summarise.model");
 const mongoose = require("mongoose");
 const { constant } = require("lodash");
+const Content = require("../models/content.model");
+const authModel = require("../models/auth.model");
+const contentModel = require("../models/content.model");
 // find user by id
 exports.findUserById = async (req, res, next) => {
   try {
@@ -141,7 +146,6 @@ exports.getResultById = async (req, res, next) => {
       const user = await getResultById(req.body._id);
       res.send(user);
     } else {
-      console.log("ELSE");
       const { userId } = req;
       const user = await getResultById(userId);
       res.send(user);
@@ -177,17 +181,19 @@ exports.getAllContents = async (req, res) => {
 
 exports.getSortByTag = async (req, res, next) => {
   try {
-    console.log(req.body.content_type);
-    const ct_type = req.body.content_type.toLowerCase();
     if (req.body.dataSet) {
       const contents = await getSortByTag(
         req.body.tag,
         req.body.dataSet,
-        ct_type
+        req.body.content_type
       );
       res.send(contents);
     } else {
-      const contents = await getSortByTag(req.body.tag, null, ct_type);
+      const contents = await getSortByTag(
+        req.body.tag,
+        null,
+        req.body.content_type
+      );
       res.send(contents);
     }
   } catch (err) {
@@ -260,11 +266,10 @@ exports.deleteComment = async (req, res, next) => {
 exports.search = async (req, res, next) => {
   try {
     if (req.body.content_type && req.body.tag) {
-      const ct_type = req.body.content_type.toLowerCase();
       const search_result = await search(
         req.params.keyword,
         req.body.tag,
-        ct_type
+        req.body.content_type
       );
       res.send(search_result);
     } else {
@@ -283,7 +288,12 @@ exports.postNewResult = async (req, res, next) => {
     tests.map((each_test) => {
       const index = each_test.categoryId;
       if (each_test.categoryId == index) {
-        array[index - 1] += each_test.score;
+        if (index - 1 < 0 || index - 1 > 8) {
+          throw {
+            message: "invalid category",
+            status: 422,
+          };
+        } else array[index - 1] += each_test.score;
       }
     });
     array[8] = Date.now();
@@ -311,6 +321,22 @@ exports.postNewResult = async (req, res, next) => {
 exports.getNewResult = async (req, res, next) => {
   try {
     const userid = req.userId;
+    if (!mongoose.Types.ObjectId.isValid(userid)) {
+      throw {
+        message: "Invalid user id",
+        status: 404,
+      };
+    }
+
+    const user = await resultNew.findOne({ userid: userid });
+
+    if (!user) {
+      throw {
+        message:
+          "Error from trying to get non-existing result, please do the test first",
+        status: 404,
+      };
+    }
 
     const newResult = await resultNew.aggregate([
       {
@@ -342,7 +368,7 @@ exports.getNewResult = async (req, res, next) => {
         skill_summarize: item.skill_summarize,
         charactor_summarize: item.charactor_summarize,
         skill: item.skill,
-        score: score[index],
+        score: score[index] * 10,
         created_at: Date(score[8]),
       };
       obj_arr.push(obj_inside);
@@ -351,5 +377,128 @@ exports.getNewResult = async (req, res, next) => {
     res.send(obj_arr);
   } catch (error) {
     next(error);
+  }
+};
+
+exports.getNewestContent = async (req, res, next) => {
+  try {
+    const { userId } = req;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      throw {
+        message: "userid is not defined",
+        status: 404,
+      };
+    }
+    let newest = await Content.find({ author_id: userId });
+    newest = newest[newest.length - 1];
+
+    const username = await userAuth.find({ _id: newest.author_id });
+    const auth_username = username[0].username;
+
+    const new_content = {
+      _id: newest._id,
+      author_id: newest.author_id,
+      content_body: newest.content_body,
+      title: newest.title,
+      likes: newest.likes,
+      uid_likes: newest.uid_likes,
+      tag: newest.tag,
+      content_type: newest.content_type,
+      image: newest.image,
+      author_username: auth_username,
+      created_at: newest.created_at,
+      updated_at: newest.updated_at,
+    };
+    res.send(new_content);
+  } catch (err) {
+    console.log("err: ", err);
+    if (!err.status) {
+      err.status = 500;
+    }
+    next(err);
+  }
+};
+
+exports.getContentById = async (req, res, next) => {
+  try {
+    if (req.body.author_id) {
+      const user = await getContentById(req.body.author_id);
+      res.send(user);
+    } else {
+      const { userId } = req;
+      console.log(userId);
+      const user = await getContentById(userId);
+      res.send(user);
+    }
+  } catch (err) {
+    console.log("err: ", err);
+    if (!err.status) {
+      err.status = 500;
+    }
+    next(err);
+  }
+};
+
+async function formatResult(result) {
+  let summarise = await summariseModel.find();
+  const score = result;
+  const obj_arr = [];
+  summarise.map((item, index) => {
+    const obj_inside = {
+      category_id: item.category_id,
+      description: item.description,
+      description_career: item.description_career,
+      image_charactor: item.image_charactor,
+      skill_summarize: item.skill_summarize,
+      charactor_summarize: item.charactor_summarize,
+      skill: item.skill,
+      score: score[index] * 10,
+      created_at: Date(score[8]),
+    };
+    obj_arr.push(obj_inside);
+  });
+  return obj_arr;
+}
+
+async function formatContent(content, username) {
+  const new_content = {
+    _id: content._id,
+    author_id: content.author_id,
+    content_body: content.content_body,
+    title: content.title,
+    likes: content.likes,
+    uid_likes: content.uid_likes,
+    tag: content.tag,
+    content_type: content.content_type,
+    image: content.image,
+    author_username: username,
+    created_at: content.created_at,
+    updated_at: content.updated_at,
+  };
+  return new_content;
+}
+
+exports.getProfile = async (req, res, next) => {
+  try {
+    const userId = req.userId;
+    const authData = await authModel.find({ _id: userId });
+    const resultData = await resultNew.find({ userid: userId });
+    const contentData = await contentModel.find({ author_id: userId });
+    const results_array = resultData[0].results;
+
+    const promises = results_array.map(async (element) => {
+      const result = await formatResult(element);
+      return result;
+    });
+    const results = await Promise.all(promises);
+
+    const content_promise = contentData.map(async (element) => {
+      const content = await formatContent(element, authData[0].username);
+      return content;
+    });
+    const new_contents = await Promise.all(content_promise);
+    res.send({ auth: authData, results: results, contents: new_contents });
+  } catch (err) {
+    next(err);
   }
 };
