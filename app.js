@@ -57,7 +57,7 @@ app.use((err, req, res, next) => {
     data: err.data,
   });
 });
-app.use(cors({ origin: "http://18.139.108.242:5000/" }));
+app.use(cors({ origin: "http://18.139.108.242:3000/" }));
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
