@@ -59,5 +59,3 @@ async function uploadManyFile(files, userId, pathS3) {
 }
 
 exports.uploadManyFile = uploadManyFile;
-
-//dowmload a file from 23
