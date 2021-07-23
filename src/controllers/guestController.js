@@ -2,6 +2,7 @@ const { calculateResult } = require("../functions/guest");
 const GuestModel = require("../models/guest.model");
 const GuestResultsModel = require("../models/guesrResult.model");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 module.exports.calculateResult = async (req, res, next) => {
   const _id = req._id;
@@ -30,6 +31,29 @@ module.exports.createGuest = async (req, res, next) => {
 };
 
 module.exports.getResult = async (req, res, next) => {
-  const results = await GuestResultsModel.findOne({ guest_id: req._id });
-  res.send(results);
+  const results = await GuestResultsModel.aggregate([
+    {
+      $match: {
+        guest_id: new mongoose.Types.ObjectId(req._id),
+      },
+    },
+    {
+      $addFields: {
+        result: {
+          $slice: ["$result", -1],
+        },
+      },
+    },
+    {
+      $unwind: {
+        path: "$result",
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+      },
+    },
+  ]);
+  res.send(results[0].result);
 };
