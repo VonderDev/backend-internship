@@ -48,7 +48,7 @@ exports.signup = async (req, res, next) => {
   }
   if (hasUser) {
     throw {
-      message: "Username has been used.",
+      message: "Username has been used. ",
       status: 500,
     };
   }
