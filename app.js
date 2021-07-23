@@ -10,6 +10,7 @@ const app = express();
 const port = 4000;
 const cors = require("cors");
 app.use(cors());
+// app.use(cors({ origin: "http://18.139.108.242:5000/" }));
 const { uploadManyFile } = require("./src/utils/s3");
 
 // const fileFilter = (req, file, cb) => {
@@ -29,8 +30,13 @@ const { uploadManyFile } = require("./src/utils/s3");
 // };
 
 const connectMongo = async (req, res, next) => {
-  await connectToDatabase();
-  next();
+  try {
+    await connectToDatabase();
+    next();
+  } catch (err) {
+    console.log("Eieieieieiei");
+    console.log(err);
+  }
 };
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -51,6 +57,7 @@ app.use((err, req, res, next) => {
     data: err.data,
   });
 });
+app.use(cors({ origin: "http://18.139.108.242:5000/" }));
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);

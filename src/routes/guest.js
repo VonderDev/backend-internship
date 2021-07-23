@@ -1,18 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const usersController = require("../controllers/usersController");
-const authController = require("../controllers/authController");
 const guestController = require("../controllers/guestController");
-const auth = require("../middlewares/guestAuth");
+const { guestAuthMiddleware } = require("../middlewares/guestAuth");
+const { tryCatch } = require("../middlewares/tryCatchController");
 
-// router.post(
-//   "/guest/result",
-//   auth.guestAuthMiddleware,
-//   usersController.createResultById
-// );
-// router.post("/guest", usersController.createGuest);
-// router.post("/guest/signup", auth.guestAuthMiddleware, authController.signup);
+//POST
+router.post(
+  "/guest/result",
+  guestAuthMiddleware,
+  tryCatch(guestController.calculateResult)
+);
 
-router.post("/guest/result", guestController.calculateResult);
+router.get(
+  "/guest/result",
+  guestAuthMiddleware,
+  tryCatch(guestController.getResult)
+);
+router.post("/guest/create", tryCatch(guestController.createGuest));
 
 module.exports = router;

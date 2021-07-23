@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest --watchAll",
+    "test": "nodemon --exec mocha ./src/testing --timeout 1000000000",
     "start": "nodemon app.js"
   },
   "repository": {
@@ -18,10 +18,13 @@
   },
   "homepage": "https://github.com/vonder-thailand/intern-backend#readme",
   "dependencies": {
-    "aws-sdk": "^2.928.0",
+    "aws-sdk": "^2.947.0",
     "axios": "^0.21.1",
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.0",
+    "chai": "^4.3.4",
+    "chai-http": "^4.3.0",
+    "chai-json-pattern": "^1.1.0",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
@@ -30,12 +33,13 @@
     "jest": "^27.0.5",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.21",
-    "mongoose": "^5.12.13",
+    "mocha": "^9.0.2",
+    "mongoose": "^5.13.2",
     "multer": "^1.4.2",
     "ngrok": "^4.0.1",
     "node-cron": "^3.0.0",
-    "nodemon": "^2.0.7",
-    "npm": "^7.17.0",
+    "nodemon": "^2.0.12",
+    "npm": "^7.20.0",
     "supertest": "^6.1.3"
   }
 }

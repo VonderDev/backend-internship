@@ -2,15 +2,14 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const guests = new Schema(
+  {},
   {
-    resultId: { type: mongoose.ObjectId, index: true },
-    isDeleted: { type: Boolean, default: false },
-  },
-  {
+    timestamps: true,
     strict: false,
     versionKey: false,
-    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
   }
 );
+
+guests.index({ createdAt: 1 }, { expireAfterSeconds: 86400 });
 
 module.exports = mongoose.model("guests", guests);

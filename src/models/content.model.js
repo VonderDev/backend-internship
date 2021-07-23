@@ -5,7 +5,6 @@ const contents = new Schema(
   {
     content_body: { type: String, default: "-" },
     title: { type: String, default: "-" },
-    likes: { type: Number, default: 0 },
     uid_likes: [{ type: [mongoose.ObjectId], default: ["-"] }],
     author_id: { type: mongoose.ObjectId, defalut: "-" },
     tag: { type: [String], defalut: ["-"] },
