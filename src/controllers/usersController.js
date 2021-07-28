@@ -16,8 +16,10 @@ const {
   search,
   getContentById,
   getContentByContentId,
-  getResultByIndex
+  getResultByIndex,
+  userContentByResult,
 } = require("../functions/user");
+const { guestContentByResult } = require("../functions/guest");
 const { formatContent, formatResult } = require("../functions/index");
 const { uploadManyFile } = require("../utils/s3");
 const resultNew = require("../models/resultNew.model");
@@ -25,6 +27,8 @@ const userAuth = require("../models/auth.model");
 const mongoose = require("mongoose");
 const Content = require("../models/content.model");
 const authModel = require("../models/auth.model");
+const guestResult = require("../models/guestResult.model");
+const { tags } = require("../functions/const");
 
 // find user by id
 exports.findUserById = async (req, res, next) => {
@@ -264,7 +268,6 @@ exports.getNewestContent = async (req, res, next) => {
 
   const username = await userAuth.find({
     _id: newest.author_id,
-    isDeleted: false,
   });
   const auth_username = username[0].username;
 
@@ -338,7 +341,6 @@ exports.getSortedContentByLike = async (req, res, next) => {
     const authorId = element.author_id;
     const username = await userAuth.findOne({
       _id: authorId,
-      isDeleted: false,
     });
     const content = await formatContent(element, username.username);
     return content;
@@ -349,12 +351,36 @@ exports.getSortedContentByLike = async (req, res, next) => {
   res.send(new_contents);
 };
 
-
-exports.getResultByIndex = async (req,res,next) => {
-  
+exports.getResultByIndex = async (req, res, next) => {
   const user_id = mongoose.Types.ObjectId(req.params.user_id);
   const index = req.params.array_index;
 
-  const result = await getResultByIndex(user_id,index);
+  const result = await getResultByIndex(user_id, index);
   res.send(result);
+};
+
+exports.getContentByResult = async (req, res, next) => {
+  const { userId, role } = req;
+  if (role) {
+    const contents = await userContentByResult(userId);
+    res.send(contents);
+  } else {
+    const contents = await guestContentByResult(userId);
+    res.send(contents);
+  }
+};
+
+exports.getContentByResultIndex = async (req, res, next) => {
+  const { userId } = req;
+  const index = req.params.index;
+  const result_obj = await getResultByIndex(userId, index);
+  let result = [];
+  result_obj.map((item) => {
+    result.push(item.score);
+  });
+  let m = Math.max(...result);
+  let maxes = result.reduce((p, c, i, a) => (c == m ? p.concat(i) : p), []);
+  const userTags = maxes.map((userTag) => tags[userTag]);
+  const contents = await getSortByTag(userTags, null, []);
+  res.send(contents);
 };

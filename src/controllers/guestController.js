@@ -1,6 +1,6 @@
 const { calculateResult } = require("../functions/guest");
 const GuestModel = require("../models/guest.model");
-const GuestResultsModel = require("../models/guesrResult.model");
+const GuestResultsModel = require("../models/guestResult.model");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 

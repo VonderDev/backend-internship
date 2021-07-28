@@ -14,3 +14,14 @@ module.exports.filterTwo = {
   TAG_AND_CONTENT: "tagAndContent",
   NONE: "none",
 };
+
+module.exports.tags = [
+  "word smart",
+  "logic smart",
+  "picture smart",
+  "body smart",
+  "music smart",
+  "people smart",
+  "self smart",
+  "nature smart",
+];
