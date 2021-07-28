@@ -7,6 +7,7 @@ const valid_id = mongoose.Types.ObjectId.isValid;
 const resultNew = require("../models/resultNew.model");
 const summariseModel = require("../models/summarise.model");
 const { filter, filterTwo } = require("../functions/const");
+const { tags } = require("../functions/const");
 const {
   arrayLower,
   checkTag,
@@ -63,7 +64,7 @@ module.exports.deleteUserById = async (userId) => {
       status: 404,
     };
   }
-  await resultNewModel.deleteOne({userid: userId})
+  await resultNewModel.deleteOne({ userid: userId });
   return userAuth.findOneAndUpdate(
     { _id: userId },
     {
@@ -126,11 +127,11 @@ module.exports.getAllContents = async () => {
 
   const content_promise = content.map(async (element) => {
     const user = await authModel.findOne({ _id: element.author_id });
-    if(!user){
-      throw{
+    if (!user) {
+      throw {
         status: 404,
-        message: `author for the content ${element.title} doesn't exist in the database`
-      }
+        message: `author for the content ${element.title} doesn't exist in the database`,
+      };
     }
     const content = await formatContent(element, user.username);
     return content;
@@ -195,11 +196,11 @@ module.exports.getSortByTag = async (tag, dataSet, content_type) => {
   const content_promise = filtered.map(async (element) => {
     const userId = element.author_id;
     const user = await authModel.findOne({ _id: userId });
-    if(!user){
-      throw{
+    if (!user) {
+      throw {
         status: 404,
-        message: `author for the content ${element.title} doesn't exist in the database`
-      }
+        message: `author for the content ${element.title} doesn't exist in the database`,
+      };
     }
     const content = await formatContent(element, user.username);
     return content;
@@ -401,7 +402,6 @@ module.exports.getContentById = async (input) => {
     }
     const username = await authModel.find({
       _id: content[0].author_id,
-      isDeleted: false,
     });
     const auth_username = username[0].username;
 
@@ -488,4 +488,35 @@ exports.getResultByIndex = async (user_id, index) => {
   const score = newResult[index_number].results;
   const new_result = await formatResult(score);
   return new_result;
+};
+
+exports.userContentByResult = async (userId) => {
+  const userResult = await resultNew.aggregate([
+    {
+      $match: {
+        userid: mongoose.Types.ObjectId(userId),
+      },
+    },
+    {
+      $addFields: {
+        results: {
+          $slice: ["$results", -1],
+        },
+      },
+    },
+  ]);
+  if (!userResult.length) {
+    throw {
+      status: 404,
+      message:
+        "error from trying to get non-existing result, please do the test first",
+    };
+  }
+  const result = userResult[0].results[0];
+  result.pop();
+  let m = Math.max(...result);
+  let maxes = result.reduce((p, c, i, a) => (c == m ? p.concat(i) : p), []);
+  const userTags = maxes.map((userTag) => tags[userTag]);
+  const contents = await this.getSortByTag(userTags, null, []);
+  return contents;
 };

@@ -11,18 +11,12 @@ router.get(
   auth.authMiddleware,
   tryCatch(usersController.findUserById)
 );
-router.get(
-  "/user/content/get",
-  tryCatch(usersController.getAllContents)
-);
+router.get("/user/content/get", tryCatch(usersController.getAllContents));
 router.get(
   "/user/comment/get/:page-:limit/:contentId",
   tryCatch(usersController.getCommentByContentId)
 );
-router.post(
-  "/user/search/:keyword",
-  tryCatch(usersController.search)
-);
+router.post("/user/search/:keyword", tryCatch(usersController.search));
 router.get(
   "/user/newResult",
   auth.authMiddleware,
@@ -51,7 +45,6 @@ router.get(
   tryCatch(usersController.getProfile)
 );
 
-
 router.get(
   "/user/getResultbyIndex/:user_id/:array_index",
   auth.authMiddleware,
@@ -78,10 +71,7 @@ router.post(
   tryCatch(usersController.postContent)
 );
 
-router.post(
-  "/user/content/tag",
-  tryCatch(usersController.getSortByTag)
-);
+router.post("/user/content/tag", tryCatch(usersController.getSortByTag));
 
 router.post(
   "/user/newResult",
@@ -123,6 +113,18 @@ router.delete(
 router.get(
   "/user/content/sort/like/:page-:limit",
   tryCatch(usersController.getSortedContentByLike)
+);
+
+router.get(
+  "/user/content/result",
+  auth.authMiddleware,
+  tryCatch(usersController.getContentByResult)
+);
+
+router.get(
+  "/user/content/result/:index",
+  auth.authMiddleware,
+  tryCatch(usersController.getContentByResultIndex)
 );
 
 module.exports = router;

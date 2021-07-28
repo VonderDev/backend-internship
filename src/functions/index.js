@@ -1,6 +1,7 @@
 const { filter, filterTwo } = require("../functions/const");
 const summariseModel = require("../models/summarise.model");
 const contentModel = require("../models/content.model");
+const { tags } = require("../functions/const");
 module.exports.arrayLower = (array) => {
   array = array.map((item) => {
     return item.toLowerCase();
@@ -9,17 +10,6 @@ module.exports.arrayLower = (array) => {
 };
 
 module.exports.checkTag = (tag) => {
-  tags = [
-    "word smart",
-    "logic smart",
-    "picture smart",
-    "body smart",
-    "nature smart",
-    "self smart",
-    "people smart",
-    "music smart",
-  ];
-
   tag.map((item) =>
     tags.indexOf(item) == -1
       ? (function () {

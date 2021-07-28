@@ -1,5 +1,5 @@
 const questionModel = require("../models/questions.model");
-const resultModel = require("../models/guesrResult.model");
+const resultModel = require("../models/guestResult.model");
 const {
   findAdminById,
   findAllAdmins,
