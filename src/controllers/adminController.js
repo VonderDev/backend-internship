@@ -10,12 +10,16 @@ const {
 } = require("../functions/admin");
 
 exports.getAllResult = async (req, res, next) => {
+  // user !== for check type and value variable
+  // fyi: https://stackoverflow.com/questions/8616483/javascript-comparison-operators-vs
   if (req.role != "admin") {
     throw {
       status: 400,
       message: "only admin can access",
     };
   }
+  //Use default limit, skip for protect client load
+  //ex: limit: 10, skip: 0 for default
   const results = await resultModel.find();
   if (!results.length) {
     throw {
@@ -33,6 +37,10 @@ exports.getAdminById = async (req, res, next) => {
       message: "only admin can access",
     };
   }
+  //use res.send(await findAdminById(req.body._id ? req.body._id : req.userId))
+  //for short line :
+  //const {_id} = req.body
+  //res.send(await findAdminById(_id ? _id : userId))
   req.body._id
     ? res.send(await findAdminById(req.body._id))
     : res.send(await findAdminById(req.userId));
@@ -78,6 +86,7 @@ exports.getQuestionByCat = async (req, res, next) => {
   }
   const catName = req.body.categoryIndex;
   const question = await questionModel.find({ categoryIndex: catName });
+  //use if(!question && !question.length)
   if (!question.length) {
     throw {
       message: `could not find question from category ${catName}`,
@@ -121,6 +130,7 @@ exports.updateFields = async (req, res, next) => {
   );
   const { role } = req;
   if (role != "admin") {
+    //error 403 for forbidden
     return res.status(400).json({
       status: "error",
       message: "only admin can access",

@@ -32,6 +32,11 @@ const { tags } = require("../functions/const");
 
 // find user by id
 exports.findUserById = async (req, res, next) => {
+  // const {_id} = req.body
+  // const {userId} = req
+  // const user = await findUserById(_id ? _id : userId);
+  // res.status(200).send(user).end();
+
   if (req.body._id) {
     const user = await findUserById(req.body._id);
     res.send(user);
@@ -44,6 +49,10 @@ exports.findUserById = async (req, res, next) => {
 };
 
 exports.updateUserById = async (req, res, next) => {
+  // const { _id } = req.body
+  // const { userId } = req
+  // const updateUser = await updateUserById(req.body, _id ? _id : userId);
+  // res.status(200).send(updateUser).end();
   if (req.body._id) {
     const updateUser = await updateUserById(req.body, req.body._id);
     res.send(updateUser);
@@ -55,6 +64,10 @@ exports.updateUserById = async (req, res, next) => {
 };
 
 exports.deleteUserById = async (req, res, next) => {
+  // const { _id } = req.body
+  // const { userId } = req
+  // const deleteUser = await deleteUserById(_id ? _id : userId);
+  // res.status(200).send(deleteUser).end();
   if (req.body._id) {
     const deleteUser = await deleteUserById(req.body._id);
     res.send(deleteUser);
@@ -85,6 +98,10 @@ exports.createGuest = async (req, res) => {
 };
 
 exports.getResultById = async (req, res, next) => {
+  // const { _id } = req.body
+  // const { userId } = req
+  // const user = await getResultById(_id ? _id : userId);
+  // res.status(200).send(user).end();
   if (req.body._id) {
     const user = await getResultById(req.body._id);
     res.send(user);
@@ -107,6 +124,13 @@ exports.getAllContents = async (req, res) => {
 };
 
 exports.getSortByTag = async (req, res, next) => {
+  // const { dataSet,tag,content_type } = req.body
+  // const contents = await getSortByTag(
+  //   tag,
+  //   dataSet ? dataSet : null,
+  //   content_type
+  // );
+  // res.status(200).send(contents).end();
   if (req.body.dataSet) {
     const contents = await getSortByTag(
       req.body.tag,
@@ -157,6 +181,11 @@ exports.deleteComment = async (req, res, next) => {
 };
 
 exports.search = async (req, res, next) => {
+  //recommend:
+  // const { content_type, tag } = req.body;
+  // const { keyword } = req.params;
+  // const search_result = await search(keyword, tag || null, content_type || null);
+  // res.status(200).send(search_result).end();
   if (req.body.content_type && req.body.tag) {
     const search_result = await search(
       req.params.keyword,
@@ -183,6 +212,7 @@ exports.postNewResult = async (req, res, next) => {
   const array = [0, 0, 0, 0, 0, 0, 0, 0];
 
   const tests = req.body;
+  // use _.find or _.some ?
   tests.map((each_test) => {
     const index = each_test.categoryId;
     if (each_test.categoryId == index) {
@@ -194,9 +224,11 @@ exports.postNewResult = async (req, res, next) => {
       } else array[index - 1] += each_test.score;
     }
   });
+  // use .push ?
   array[8] = Date.now();
-  const userId = req.userId;
+  const userId = req.userId; // const { userId } = req
   const user = await resultNew.find({ userid: userId });
+  // should use if(!user && !user.length)
   if (!user.length) {
     newResult = await resultNew.create({
       userid: userId,
@@ -215,6 +247,7 @@ exports.postNewResult = async (req, res, next) => {
 
 exports.getNewResult = async (req, res, next) => {
   const userid = req.userId;
+  //maybe use 400 for Bad request from client
   if (!mongoose.Types.ObjectId.isValid(userid)) {
     throw {
       message: "Invalid user id",
@@ -250,8 +283,11 @@ exports.getNewResult = async (req, res, next) => {
     },
   ]);
 
+  // use const newResult =  resultNew.aggregate([...]).then(res => res[0]);
+  // so -> const { results } = newResult
+  // const new_result = await formatResult(results);
   const score = newResult[0].results;
-  const new_result = await formatResult(score);
+  const new_result = await formatResult(score); // variable should camel case
   res.send(new_result);
 };
 
@@ -263,6 +299,7 @@ exports.getNewestContent = async (req, res, next) => {
       status: 404,
     };
   }
+  // use Content.find(..).sort( { created_at: -1 } ).then(res => res[0]);
   let newest = await Content.find({ author_id: userId, isDeleted: false });
   newest = newest[newest.length - 1];
 
@@ -276,6 +313,10 @@ exports.getNewestContent = async (req, res, next) => {
 };
 
 exports.getContentById = async (req, res, next) => {
+  // const { author_id } = req.body
+  // const { userId } = req
+  // const user = await getContentById(author_id ? author_id : userId);
+  // res.status(200).send(user).end();
   if (req.body.author_id) {
     const user = await getContentById(req.body.author_id);
     res.send(user);
@@ -291,11 +332,18 @@ exports.getContentByContentId = async (req, res, next) => {
     const ContentID = await getContentByContentId(req.params._id);
     res.send(ContentID);
   }
+  // so else ?
 };
 
 exports.getProfile = async (req, res, next) => {
   const userId = req.userId;
   let results_array;
+  // use:
+  // const [authData, resultData, contentData] = await Promise.all([
+  //   authModel.find({ _id: userId, isDeleted: false }),
+  //   resultNew.find({ userid: userId }),
+  //   Content.find({ author_id: userId, isDeleted: false }),
+  // ]);
   const authData = await authModel.find({ _id: userId, isDeleted: false });
   const resultData = await resultNew.find({
     userid: userId,
@@ -322,6 +370,7 @@ exports.getProfile = async (req, res, next) => {
 
   const new_contents = await Promise.all(content_promise);
 
+  // {results} === {results: results}
   res.send({ auth: authData, results: results, contents: new_contents });
 };
 
@@ -361,6 +410,11 @@ exports.getResultByIndex = async (req, res, next) => {
 
 exports.getContentByResult = async (req, res, next) => {
   const { userId, role } = req;
+  // use: 
+  // const contents = role
+  //   ? await userContentByResult(userId)
+  //   : await guestContentByResult(userId);
+  // res.status(200).send(contents).end();
   if (role) {
     const contents = await userContentByResult(userId);
     res.send(contents);

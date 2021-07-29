@@ -6,6 +6,11 @@ const mongoose = require("mongoose");
 
 module.exports.calculateResult = async (req, res, next) => {
   const _id = req._id;
+  // use Promise.all for save time
+  // const [result, guest] = await Promise.all([
+  //   calculateResult(req.body),
+  //   GuestResultsModel.findOne({ guest_id: _id }),
+  // ]);
   const result = await calculateResult(req.body);
   const guest = await GuestResultsModel.findOne({ guest_id: _id });
 
@@ -23,7 +28,7 @@ module.exports.calculateResult = async (req, res, next) => {
 };
 
 module.exports.createGuest = async (req, res, next) => {
-  const resuit = await GuestModel.create({});
+  const resuit = await GuestModel.create({}); //resuit or result ?
   const token = jwt.sign({ _id: resuit._id }, process.env.Secret_Key, {
     expiresIn: "1d",
   });
